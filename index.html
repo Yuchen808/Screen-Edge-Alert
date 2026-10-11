@@ -7,19 +7,29 @@
   @font-face { font-family: 'Inter Display'; font-weight: 500; src: url('assets/InterDisplay-Medium.ttf') format('truetype'); }
   @font-face { font-family: 'Inter Display'; font-weight: 600; src: url('assets/InterDisplay-SemiBold.ttf') format('truetype'); }
   html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
-  /* 层级：截图（只在卡片下方）→ 光效画布 → 玻璃卡片 */
-  #snap { position: fixed; background-size: 100% 100%; opacity: 0; }
+  /* 层级：卡片下方的桌面截图 → 光效画布 → 玻璃卡片 */
+  #snap { position: fixed; border-radius: 14px; background-repeat: no-repeat; opacity: 0; }
   #glow { position: fixed; inset: 0; width: 100vw; height: 100vh; }
   #card { position: fixed; inset: 0; }
-  /* liquid-glass 渲染成几层兄弟元素（玻璃本体 + 高光边框），淡入要落在每一层上；不能放在祖先上，否则变成 backdrop root 玻璃就看不到光效 */
-  #card > * { opacity: var(--card-o, 0); scale: var(--card-s, 0.9); }
-  .label {
+  /* 动画变量直接作用在卡片自身；祖先上的 opacity/filter 会变成 backdrop root，卡片就模糊不到光效 */
+  #card > * { opacity: var(--card-o, 0); scale: var(--card-s, 0.92); }
+  .glass {
+    position: fixed; translate: -50% -50%;
+    padding: 15px 28px; border-radius: 14px;
     font-family: 'Inter Display', 'PingFang SC', sans-serif; font-weight: 600;
     font-size: 17px; letter-spacing: -0.014em; line-height: 1;
-    color: #FFFFFF; white-space: nowrap;
-    padding: 17px 30px; border-radius: 14px;
-    background: rgba(18, 10, 26, 0.16);   /* 很淡的深色托底，晕染很亮时白字也清楚 */
-    text-shadow: 0 1px 2px rgba(20, 6, 22, 0.35);
+    color: rgba(255, 255, 255, 0.97); white-space: nowrap;
+    -webkit-font-smoothing: antialiased;
+    text-shadow: 0 0.5px 1px rgba(20, 6, 26, 0.30);
+    /* 玻璃本体：模糊 + 提饱和身后的晕染，再压一层很淡的深梅色，保证白字对比 */
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)), rgba(30, 16, 38, 0.30);
+    backdrop-filter: blur(22px) saturate(185%);
+    /* 只有发丝级的边：0.5px 内描边 + 顶部 0.5px 镜面高光 + 很轻的投影 */
+    box-shadow:
+      inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.42),
+      0 1px 2px rgba(12, 4, 18, 0.10),
+      0 8px 24px rgba(12, 4, 18, 0.16);
   }
 </style>
 </head>

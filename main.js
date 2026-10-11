@@ -1,12 +1,13 @@
 // LifeOS Toast — 21:00「Time to log」
-// 全屏透明、点击穿透的窗口：WebGL 画屏幕边缘光 + 右下角宇宙色晕染，liquid-glass 卡片叠在晕染上。
-// 玻璃要有东西可折射：先截下卡片所在区域的屏幕，铺在卡片正下方（在晕染图层之下）。
+// 全屏透明、点击穿透的窗口：WebGL 画屏幕边缘光 + 右下角宇宙色晕染，单层 CSS 毛玻璃卡片叠在晕染上。
+// backdrop-filter 看不到窗口下面的桌面，所以先截下卡片附近的屏幕，渲染端只把卡片大小的一块垫在光效下面，
+// 让卡片把「桌面 + 光效」一起模糊——截图被糊掉，冻结也看不出来。
 const { app, BrowserWindow, screen, desktopCapturer, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 const CARD_GAP = { right: 111, bottom: 56 };   // 卡片中心离工作区右下角的距离（与上一版位置一致）
-const CROP = { w: 300, h: 150 };                // 卡片下方截图区域
+const CROP = { w: 300, h: 150 };                // 截图范围（比卡片大，渲染端再裁成卡片大小）
 
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 
@@ -26,7 +27,7 @@ app.whenReady().then(async () => {
       x: Math.round(crop.x * sf), y: Math.round(crop.y * sf),
       width: Math.round(crop.w * sf), height: Math.round(crop.h * sf),
     }).toDataURL();
-  } catch (e) { /* 截图失败就只用晕染做底 */ }
+  } catch (e) { /* 截图失败就只模糊光效 */ }
 
   const win = new BrowserWindow({
     x: b.x, y: b.y, width: b.width, height: b.height,
