@@ -1,5 +1,5 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('toast', {
-  snapshot: () => ipcRenderer.invoke('snapshot'),
+  layout: () => ipcRenderer.invoke('layout'),
   done: () => ipcRenderer.send('done'),
 });

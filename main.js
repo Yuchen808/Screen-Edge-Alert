@@ -1,55 +1,51 @@
-// LifeOS Toast — 21:00「Time to log」角标（Electron + liquid-glass-react）
-// 1. 截下角标所在区域的屏幕，作为页面背景（这样 backdrop-filter 的玻璃折射才有东西可折射）
-// 2. 无边框透明置顶窗口，不抢焦点、不挡鼠标
-// 3. 页面动画结束后通知主进程：打开 Obsidian（--exe / --uri），然后退出
+// LifeOS Toast — 21:00「Time to log」
+// 全屏透明、点击穿透的窗口：WebGL 画屏幕边缘光 + 右下角宇宙色晕染，liquid-glass 卡片叠在晕染上。
+// 玻璃要有东西可折射：先截下卡片所在区域的屏幕，铺在卡片正下方（在晕染图层之下）。
 const { app, BrowserWindow, screen, desktopCapturer, ipcMain } = require('electron');
-const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
-const arg = name => (process.argv.find(a => a.startsWith(`--${name}=`)) || '').slice(name.length + 3);
-const W = 214, H = 104, GAP = 4; // 窗口比卡片大，给玻璃边缘的折射和高光留位置
+const CARD_GAP = { right: 111, bottom: 56 };   // 卡片中心离工作区右下角的距离（与上一版位置一致）
+const CROP = { w: 300, h: 150 };                // 卡片下方截图区域
 
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
 
 app.whenReady().then(async () => {
   const d = screen.getPrimaryDisplay();
-  const sf = d.scaleFactor, wa = d.workArea;
-  const x = wa.x + wa.width - W - GAP, y = wa.y + wa.height - H - GAP;
+  const sf = d.scaleFactor, b = d.bounds, wa = d.workArea;
+  const card = { x: wa.x + wa.width - CARD_GAP.right - b.x, y: wa.y + wa.height - CARD_GAP.bottom - b.y };
+  const crop = { x: card.x - CROP.w / 2, y: card.y - CROP.h / 2, w: CROP.w, h: CROP.h };
 
   let snapshot = '';
   try {
     const [src] = await desktopCapturer.getSources({
       types: ['screen'],
-      thumbnailSize: { width: Math.round(d.bounds.width * sf), height: Math.round(d.bounds.height * sf) },
+      thumbnailSize: { width: Math.round(b.width * sf), height: Math.round(b.height * sf) },
     });
     snapshot = src.thumbnail.crop({
-      x: Math.round((x - d.bounds.x) * sf), y: Math.round((y - d.bounds.y) * sf),
-      width: Math.round(W * sf), height: Math.round(H * sf),
+      x: Math.round(crop.x * sf), y: Math.round(crop.y * sf),
+      width: Math.round(crop.w * sf), height: Math.round(crop.h * sf),
     }).toDataURL();
-  } catch (e) { /* 截图失败就退化成纯透明底 */ }
+  } catch (e) { /* 截图失败就只用晕染做底 */ }
 
   const win = new BrowserWindow({
-    x, y, width: W, height: H,
-    frame: false, transparent: true, resizable: false, movable: false,
+    x: b.x, y: b.y, width: b.width, height: b.height,
+    frame: false, transparent: true, resizable: false, movable: false, fullscreenable: false,
     alwaysOnTop: true, skipTaskbar: true, focusable: false, hasShadow: false, show: false,
-    backgroundColor: '#00000000',
+    backgroundColor: '#00000000', enableLargerThanScreen: true,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, sandbox: false },
   });
   win.setAlwaysOnTop(true, 'screen-saver');
   win.setIgnoreMouseEvents(true);
+  win.setBounds({ x: b.x, y: b.y, width: b.width, height: b.height });
 
-  ipcMain.handle('snapshot', () => snapshot);
-  ipcMain.once('done', () => {
-    const exe = arg('exe'), uri = arg('uri');
-    if (uri) {
-      const child = exe ? spawn(exe, [uri], { detached: true, stdio: 'ignore' })
-                        : spawn('cmd', ['/c', 'start', '', uri], { detached: true, stdio: 'ignore' });
-      child.unref();
-    }
-    app.quit();
-  });
+  ipcMain.handle('layout', () => ({ snapshot, card, crop, preview: process.argv.includes('--preview') }));
+  ipcMain.once('done', () => app.quit());
 
+  // 渲染进程的报错写进 toast.log，便于排查
+  win.webContents.on('console-message', (_e, level, msg) => { if (level >= 2) fs.appendFileSync(path.join(__dirname, 'toast.log'), `${new Date().toISOString()} ${msg}
+`); });
   await win.loadFile(path.join(__dirname, 'index.html'));
   win.showInactive();
-  setTimeout(() => app.quit(), 15000); // 兜底
+  setTimeout(() => app.quit(), 20000); // 兜底
 });
