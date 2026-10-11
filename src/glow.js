@@ -59,14 +59,14 @@ void main(){
   // ---- 右下角晕染 ----
   if (uBloom > 0.001) {
     vec2 rel = (p - uCorner) / uDpr;
-    float S = 340.0 * uBloom * (1.0 + 0.035 * sin(t * 2.1));
+    float S = 470.0 * uBloom * (1.0 + 0.035 * sin(t * 2.1));
     vec2 wv = vec2(fbm(rel / 170.0 + vec2(t * 0.07, 0.0)), fbm(rel / 170.0 + vec2(5.2, -t * 0.06))) - 0.5;
     vec2 rw = rel + wv * 55.0 * uBloom;
     float r = length(rw) / max(S, 1.0);
     float neb = fbm(rw / 120.0 + vec2(t * 0.045, -t * 0.035));
 
-    // 绿核（参考图中心）
-    float gc = exp(-pow(r / 0.36, 2.0));
+    // 绿核（参考图中心；圆心在角尖，屏幕上只露出四分之一，所以半径放大）
+    float gc = exp(-pow(r / 0.42, 2.0));
     vec3 gcol = mix(vec3(0.38, 0.90, 0.42), vec3(0.70, 1.0, 0.72), exp(-pow(r / 0.10, 2.0)) * 0.40);
     // 品红环：环形分布 + 星云扰动，内侧偏品红、外侧偏紫
     float mh = exp(-pow((r - 0.50) / 0.24, 2.0)) * (0.55 + 0.75 * neb);
@@ -106,7 +106,7 @@ export function createGlow(canvas) {
   return ({ time, edge, bloom }) => {
     gl.clear(gl.COLOR_BUFFER_BIT);
     gl.uniform2f(U.res, canvas.width, canvas.height);
-    gl.uniform2f(U.corner, canvas.width - 70 * dpr, 70 * dpr);             // GL 坐标原点在左下；晕染中心在右下角往里 70px，让绿核完整露出
+    gl.uniform2f(U.corner, canvas.width, 0);                                // GL 坐标原点在左下；晕染圆心就是屏幕右下角尖，从角尖扩出、缩回角尖
     gl.uniform1f(U.time, time); gl.uniform1f(U.edge, edge); gl.uniform1f(U.bloom, bloom); gl.uniform1f(U.dpr, dpr);
     gl.drawArrays(gl.TRIANGLES, 0, 3);
   };

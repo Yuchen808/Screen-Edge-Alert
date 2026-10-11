@@ -54,8 +54,7 @@ function Card({ card }) {
     if (ms > T.holdUntil) {
       const k = easeInCubic(clamp01((ms - T.holdUntil) / T.out));
       edge *= 1 - k;
-      bloom *= 1 - k * 0.92;
-      bloom *= 1 - easeInCubic(clamp01((ms - T.holdUntil - 120) / T.out));
+      bloom *= 1 - k;                                   // 晕染整体收回右下角尖
     }
     draw({ time: s, edge, bloom: Math.max(0, bloom) });
 
