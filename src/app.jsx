@@ -67,6 +67,7 @@ function Card({ card }) {
     }
     rootStyle.setProperty('--card-o', co.toFixed(3));
     rootStyle.setProperty('--card-s', Math.max(0, cs).toFixed(4));
+    snap.style.opacity = co.toFixed(3);                 // 截图只在卡片可见时垫底，否则是一块冻住的旧画面
 
     if (ms < T.end) requestAnimationFrame(frame);
     else { draw({ time: s, edge: 0, bloom: 0 }); window.toast.done(); }
