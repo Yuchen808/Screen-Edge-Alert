@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 import { createGlow } from './glow.js';
 
 // ---- 时间线（ms）----
@@ -22,16 +23,17 @@ function Card({ card }) {
   // 卡片的淡入淡出只能作用在玻璃元素自身：祖先上的 opacity/filter 会变成 backdrop root，玻璃就看不到下面的光效
   const cardLayer = document.getElementById('card');
   const rootStyle = document.documentElement.style;
-  createRoot(cardLayer).render(<Card card={L.card} />);
+  const root = createRoot(cardLayer);
+  flushSync(() => root.render(<Card card={L.card} />));   // 同步挂载，后面要量卡片尺寸
 
   const draw = createGlow(document.getElementById('glow'));
   await document.fonts.ready;
-  await new Promise(r => requestAnimationFrame(r));     // 等 React 把卡片挂上，才量得到尺寸
 
   // 截图只铺卡片那么大（圆角一致），卡片外面看到的是真实桌面
   const snap = document.getElementById('snap');
-  if (L.snapshot) {
-    const g = cardLayer.firstElementChild, w = g.offsetWidth, h = g.offsetHeight;
+  const g = cardLayer.firstElementChild;
+  if (L.snapshot && g) {
+    const w = g.offsetWidth, h = g.offsetHeight;
     const x = L.card.x - w / 2, y = L.card.y - h / 2;
     Object.assign(snap.style, {
       left: `${x}px`, top: `${y}px`, width: `${w}px`, height: `${h}px`,
@@ -47,13 +49,11 @@ function Card({ card }) {
     const ms = now - start, s = ms / 1000;
 
     let edge = clamp01(spring(s, 5.0, 7.5));
-    let bloom = spring(Math.max(0, (ms - T.bloomDelay) / 1000), 4.6, 5.4);
     if (ms > T.holdUntil) {
       const k = easeInCubic(clamp01((ms - T.holdUntil) / T.out));
       edge *= 1 - k;
-      bloom *= 1 - k;                                   // 晕染整体收回右下角尖
     }
-    draw({ time: s, edge, bloom: Math.max(0, bloom) });
+    draw({ time: s, edge, bloom: 0 });                    // 右下角晕染已去掉（用户：一大坨太怪），只留屏幕边缘光
 
     // 卡片：弹簧放大 + 淡入；退场时缩小淡出
     const ci = (ms - T.cardIn) / 1000;

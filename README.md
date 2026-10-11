@@ -1,6 +1,6 @@
 # LifeOS Toast
 
-每晚 21:00「Time to log」：Siri 式屏幕边缘光 + 右下角宇宙色晕染（绿核 → 品红/紫星云环 → 深梅暗晕）+ 单层 CSS 毛玻璃卡片（0.5px 发丝边 + 顶部镜面高光）。晕染圆心在屏幕右下角尖，从角尖扩出、收回角尖，字体 Inter Display（OFL，见 `assets/Inter-LICENSE.txt`）。
+每晚 21:00「Time to log」：Siri 式屏幕边缘光（宇宙色盘）+ 单层 CSS 毛玻璃卡片（0.5px 发丝边 + 顶部镜面高光）。右下角晕染试过后去掉了（太抢、像一坨），shader 里 uBloom 代码保留未用，字体 Inter Display（OFL，见 `assets/Inter-LICENSE.txt`）。
 
 - 光效：`src/glow.js` 单个全屏 fragment shader。边缘光参考 [AppleIntelligenceGlowEffect](https://github.com/jacobamobin/AppleIntelligenceGlowEffect) 的多层叠加，发光线和入场弹簧参考 [glsl-playground](https://github.com/aaaa-zhen/glsl-playground)（Lorentzian `1/(d+t)`、欠阻尼弹簧 `1−e^(−λt)·cos(ωt)`）。
 - 时间线在 `src/app.jsx` 的 `T`：边缘光和晕染弹簧入场 → 卡片 380ms 弹出 → 停留 → 3.7s 起边缘光收回、晕染收拢成右下角光球、卡片淡出 → 4.5s 退出。

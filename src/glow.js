@@ -52,7 +52,7 @@ void main(){
     float a = atan(p.y - hres.y, p.x - hres.x) / 6.2831853;
     float hue = a + 0.10 * sin(t * 0.55 + a * 12.566) + 0.06 * sin(t * 0.31 - a * 25.13) + t * 0.03;
     float mod_ = 0.72 + 0.28 * noise(vec2(a * 9.0, t * 0.5));
-    float near = 0.90 + 0.30 * exp(-length((p - uCorner) / uRes) * 2.2);       // 右下角稍亮，呼应晕染
+    float near = 1.0;                                                         // 四边均匀，不再偏亮右下角
     E += pal(hue) * w * mod_ * near * uEdge;
   }
 

@@ -20,10 +20,10 @@
     font-size: 17px; letter-spacing: -0.014em; line-height: 1;
     color: rgba(255, 255, 255, 0.97); white-space: nowrap;
     -webkit-font-smoothing: antialiased;
-    text-shadow: 0 0.5px 1px rgba(20, 6, 26, 0.30);
-    /* 玻璃本体：模糊 + 提饱和身后的晕染，再压一层很淡的深梅色，保证白字对比 */
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)), rgba(30, 16, 38, 0.30);
-    backdrop-filter: blur(22px) saturate(185%);
+    text-shadow: 0 0.5px 1.5px rgba(20, 6, 26, 0.38);
+    /* 玻璃本体：小半径模糊让背后内容的形状透出来（看得出叠在东西上），几乎不加底色；白字靠柔和阴影托住 */
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)), rgba(34, 16, 44, 0.20);
+    backdrop-filter: blur(6px) saturate(180%);
     /* 只有发丝级的边：0.5px 内描边 + 顶部 0.5px 镜面高光 + 很轻的投影 */
     box-shadow:
       inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
