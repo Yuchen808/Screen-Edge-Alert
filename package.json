@@ -5,13 +5,11 @@
   "description": "21:00 Time to log — Apple liquid-glass toast for 人生OS",
   "main": "main.js",
   "scripts": {
-    "build": "esbuild src/app.jsx --bundle --minify --format=iife --outfile=dist/app.js --loader:.jsx=jsx --jsx=automatic",
+    "build": "esbuild src/app.jsx --bundle --minify --format=iife --outfile=dist/app.js",
     "start": "npm run build && electron ."
   },
   "dependencies": {
     "electron": "32.3.3",
-    "esbuild": "0.24.2",
-    "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "esbuild": "0.24.2"
   }
 }

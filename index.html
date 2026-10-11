@@ -4,39 +4,12 @@
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: file:; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' file: data:">
 <style>
-  @font-face { font-family: 'Inter Display'; font-weight: 500; src: url('assets/InterDisplay-Medium.ttf') format('truetype'); }
-  @font-face { font-family: 'Inter Display'; font-weight: 600; src: url('assets/InterDisplay-SemiBold.ttf') format('truetype'); }
   html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; }
-  /* 层级：卡片下方的桌面截图 → 光效画布 → 玻璃卡片 */
-  #snap { position: fixed; border-radius: 14px; background-repeat: no-repeat; opacity: 0; }
   #glow { position: fixed; inset: 0; width: 100vw; height: 100vh; }
-  #card { position: fixed; inset: 0; }
-  /* 动画变量直接作用在卡片自身；祖先上的 opacity/filter 会变成 backdrop root，卡片就模糊不到光效 */
-  #card > * { opacity: var(--card-o, 0); scale: var(--card-s, 0.92); }
-  .glass {
-    position: fixed; translate: -50% -50%;
-    padding: 15px 28px; border-radius: 14px;
-    font-family: 'Inter Display', 'PingFang SC', sans-serif; font-weight: 600;
-    font-size: 17px; letter-spacing: -0.014em; line-height: 1;
-    color: rgba(255, 255, 255, 0.97); white-space: nowrap;
-    -webkit-font-smoothing: antialiased;
-    text-shadow: 0 0.5px 1.5px rgba(20, 6, 26, 0.38);
-    /* 玻璃本体：小半径模糊让背后内容的形状透出来（看得出叠在东西上），几乎不加底色；白字靠柔和阴影托住 */
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)), rgba(34, 16, 44, 0.20);
-    backdrop-filter: blur(6px) saturate(180%);
-    /* 只有发丝级的边：0.5px 内描边 + 顶部 0.5px 镜面高光 + 很轻的投影 */
-    box-shadow:
-      inset 0 0 0 0.5px rgba(255, 255, 255, 0.16),
-      inset 0 0.5px 0 rgba(255, 255, 255, 0.42),
-      0 1px 2px rgba(12, 4, 18, 0.10),
-      0 8px 24px rgba(12, 4, 18, 0.16);
-  }
 </style>
 </head>
 <body>
-  <div id="snap"></div>
   <canvas id="glow"></canvas>
-  <div id="card"></div>
   <script src="dist/app.js"></script>
 </body>
 </html>
