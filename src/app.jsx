@@ -1,6 +1,7 @@
 import { createGlow } from './glow.js';
 
-// 只有 Siri 式屏幕边缘光：右下角晕染和「Time to log」卡片都试过后去掉了
+// 通用全局提醒：只有 Siri 式屏幕边缘光（右下角晕染和「Time to log」卡片都试过后去掉了）
+// 命令行：--hold=<ms> 停留到第几毫秒开始收回；--colors=<hex,hex,...> 换色盘；--preview 停留 9 秒
 // ---- 时间线（ms）----
 const T = { holdUntil: 3700, out: 650, end: 4500 };
 
@@ -11,8 +12,10 @@ const clamp01 = x => Math.min(1, Math.max(0, x));
 
 (async () => { try {
   const L = await window.toast.layout();
-  if (L.preview) { T.holdUntil = 9000; T.end = 9900; }
-  const draw = createGlow(document.getElementById('glow'));
+  if (L.hold) T.holdUntil = L.hold;
+  if (L.preview) T.holdUntil = 9000;
+  T.end = T.holdUntil + T.out + 150;
+  const draw = createGlow(document.getElementById('glow'), L.colors);
 
   let start = 0;
   const frame = now => {

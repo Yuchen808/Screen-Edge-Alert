@@ -8,6 +8,7 @@ const VERT = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`
 const FRAG = `
 precision highp float;
 uniform vec2 uRes; uniform vec2 uCorner; uniform float uTime, uEdge, uBloom, uDpr;
+uniform vec3 uPal[6];                                                       // 色盘 6 色循环，可由命令行 --colors 覆盖
 
 float hash(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p){
@@ -19,16 +20,16 @@ float fbm(vec2 p){
   for (int i = 0; i < 5; i++){ v += a * noise(p); p = mat2(1.6, 1.2, -1.2, 1.6) * p; a *= 0.5; }
   return v;
 }
-// 宇宙色盘：30·30 绿 → 青 → 靛 → 紫 → 品红 → 粉（循环）
+// 色盘：沿屏幕一圈 6 色循环（默认宇宙色盘：30·30 绿 → 青 → 靛 → 紫 → 品红 → 粉）
 vec3 pal(float t){
   t = fract(t) * 6.0;
-  vec3 c = vec3(0.502, 0.937, 0.502);
-  c = mix(c, vec3(0.247, 0.878, 0.773), smoothstep(0.0, 1.0, clamp(t,       0.0, 1.0)));
-  c = mix(c, vec3(0.486, 0.549, 1.000), smoothstep(0.0, 1.0, clamp(t - 1.0, 0.0, 1.0)));
-  c = mix(c, vec3(0.710, 0.424, 1.000), smoothstep(0.0, 1.0, clamp(t - 2.0, 0.0, 1.0)));
-  c = mix(c, vec3(1.000, 0.310, 0.640), smoothstep(0.0, 1.0, clamp(t - 3.0, 0.0, 1.0)));
-  c = mix(c, vec3(1.000, 0.560, 0.784), smoothstep(0.0, 1.0, clamp(t - 4.0, 0.0, 1.0)));
-  c = mix(c, vec3(0.502, 0.937, 0.502), smoothstep(0.0, 1.0, clamp(t - 5.0, 0.0, 1.0)));
+  vec3 c = uPal[0];
+  c = mix(c, uPal[1], smoothstep(0.0, 1.0, clamp(t,       0.0, 1.0)));
+  c = mix(c, uPal[2], smoothstep(0.0, 1.0, clamp(t - 1.0, 0.0, 1.0)));
+  c = mix(c, uPal[3], smoothstep(0.0, 1.0, clamp(t - 2.0, 0.0, 1.0)));
+  c = mix(c, uPal[4], smoothstep(0.0, 1.0, clamp(t - 3.0, 0.0, 1.0)));
+  c = mix(c, uPal[5], smoothstep(0.0, 1.0, clamp(t - 4.0, 0.0, 1.0)));
+  c = mix(c, uPal[0], smoothstep(0.0, 1.0, clamp(t - 5.0, 0.0, 1.0)));
   return c;
 }
 float sdRoundBox(vec2 p, vec2 b, float r){ vec2 q = abs(p) - b + r; return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r; }
@@ -87,7 +88,11 @@ void main(){
   gl_FragColor = vec4(clamp(rgb, 0.0, alpha), alpha);
 }`;
 
-export function createGlow(canvas) {
+export const COSMOS = ['#80EF80', '#3FE0C5', '#7C8CFF', '#B56CFF', '#FF4FA3', '#FF8FC8'];
+const rgb = h => { const n = parseInt(h.replace('#', ''), 16); return [(n >> 16 & 255) / 255, (n >> 8 & 255) / 255, (n & 255) / 255]; };
+
+// colors：1–6 个 hex，不足 6 个时循环补齐
+export function createGlow(canvas, colors = COSMOS) {
   const dpr = window.devicePixelRatio || 1;
   canvas.width = Math.round(innerWidth * dpr); canvas.height = Math.round(innerHeight * dpr);
   const gl = canvas.getContext('webgl', { premultipliedAlpha: true, alpha: true, antialias: false });
@@ -101,6 +106,8 @@ export function createGlow(canvas) {
   const loc = gl.getAttribLocation(prog, 'p'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
   const u = n => gl.getUniformLocation(prog, n);
   const U = { res: u('uRes'), corner: u('uCorner'), time: u('uTime'), edge: u('uEdge'), bloom: u('uBloom'), dpr: u('uDpr') };
+  const list = colors.length ? colors : COSMOS;
+  gl.uniform3fv(u('uPal'), new Float32Array(Array.from({ length: 6 }, (_, i) => rgb(list[i % list.length])).flat()));
   gl.viewport(0, 0, canvas.width, canvas.height);
   gl.clearColor(0, 0, 0, 0);
   return ({ time, edge, bloom }) => {

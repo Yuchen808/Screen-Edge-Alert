@@ -8,6 +8,17 @@
 - 由 Task Scheduler `LifeOSDailyReview` → `~/.claude/scripts/lifeos-daily-review.ps1` 调用：脚本先补齐本周天复盘，再运行本程序，退出后打开 `00 中控OS.base`。
 - 改完运行 `npm run build`。预览：`node_modules\electron\dist\electron.exe .`（加 `--preview` 停留更久）。
 
+## 复用为其他全局提醒
+任何脚本里一行调用（包装脚本在 `~/.claude/scripts/edge-glow.ps1`）：
+
+```powershell
+& "$env:USERPROFILE\.claude\scripts\edge-glow.ps1"                          # 默认宇宙色盘，约 4.5 秒，等播完再返回
+& "$env:USERPROFILE\.claude\scripts\edge-glow.ps1" -Preset alert -Hold 6000   # 预设：cosmos / alert（红橙粉）/ calm（蓝紫）/ focus（绿）
+& "$env:USERPROFILE\.claude\scripts\edge-glow.ps1" -Colors '#80EF80','#7C8CFF' -NoWait   # 自定义 1–6 色，不等播完
+```
+
+直接调程序：`electron.exe "<本目录>" --hold=<ms> --colors=80EF80,7C8CFF,...`（`--hold` 是开始收回的时刻，结束时刻 = hold + 800ms）。
+
 ## 试过又去掉的
 - 右下角宇宙色晕染（shader 里 `uBloom` 代码还在，传 0 不画）：像一坨，太抢。
 - 「Time to log」玻璃卡片：先用 liquid-glass-react，在 Windows Chromium 上多层错位、截图未模糊（透出背后窗口图标）、高光边粗；改成单层 CSS 毛玻璃 + desktopCapturer 垫底后干净了，但用户觉得卡片多余，整个去掉。
