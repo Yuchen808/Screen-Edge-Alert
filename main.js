@@ -1,11 +1,12 @@
-// LifeOS Toast — 通用全局提醒（屏幕边缘光）。LifeOS 每晚 21:00 用它；其他提醒用 ~/.claude/scripts/edge-glow.ps1 调
-// 全屏透明、点击穿透的窗口：WebGL 画 Siri 式屏幕边缘光（宇宙色盘），播完退出。
+// Screen Edge Alert — 全局提醒：Siri 式屏幕边缘光，播完自动退出。Windows / macOS 通用。
+// 全屏透明、点击穿透、不抢焦点的窗口，WebGL 画边缘光。
 const { app, BrowserWindow, screen, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 
 app.commandLine.appendSwitch('force-color-profile', 'srgb');
+if (process.platform === 'darwin') app.dock?.hide();            // macOS：不在 Dock 里闪一个图标
 
 app.whenReady().then(async () => {
   const d = screen.getPrimaryDisplay();
@@ -20,6 +21,7 @@ app.whenReady().then(async () => {
   });
   win.setAlwaysOnTop(true, 'screen-saver');
   win.setIgnoreMouseEvents(true);
+  if (process.platform === 'darwin') win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });   // 所有桌面、全屏 App 上都显示
   win.setBounds({ x: b.x, y: b.y, width: b.width, height: b.height });
 
   const arg = k => (process.argv.find(a => a.startsWith(`--${k}=`)) || '').slice(k.length + 3);

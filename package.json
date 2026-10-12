@@ -1,11 +1,11 @@
 {
-  "name": "lifeos-toast",
+  "name": "screen-edge-alert",
   "version": "1.0.0",
   "private": true,
-  "description": "21:00 Time to log — Apple liquid-glass toast for 人生OS",
+  "description": "Siri-style screen edge glow for global reminders (Windows / macOS)",
   "main": "main.js",
   "scripts": {
-    "build": "esbuild src/app.jsx --bundle --minify --format=iife --outfile=dist/app.js",
+    "build": "esbuild src/app.js --bundle --minify --format=iife --outfile=dist/app.js",
     "start": "npm run build && electron ."
   },
   "dependencies": {

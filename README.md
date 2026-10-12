@@ -1,25 +1,63 @@
-# LifeOS Toast
+# Screen Edge Alert
 
-每晚 21:00 的提醒：Siri / Apple Intelligence 式屏幕边缘光（宇宙色盘：30·30 绿 → 青 → 靛 → 紫 → 品红 → 粉，沿屏幕一圈缓慢流动），弹簧入场、停留、收回，4.5 秒后退出，再由脚本打开 Obsidian。
+屏幕边缘光提醒，Siri / Apple Intelligence 那种效果：屏幕四边亮起一圈流动的光，带一点弹簧回弹，停留一会儿后收回，然后程序自动退出。窗口全屏透明、点击穿透、不抢焦点，打字和点击都不受影响。Windows 和 macOS 都能用。
 
-- 光效：`src/glow.js` 单个全屏 fragment shader。边缘光参考 [AppleIntelligenceGlowEffect](https://github.com/jacobamobin/AppleIntelligenceGlowEffect) 的多层叠加（细亮线 + 中/宽/环境三层衰减），发光线和入场弹簧参考 [glsl-playground](https://github.com/aaaa-zhen/glsl-playground)（Lorentzian `1/(d+t)`、欠阻尼弹簧 `1−e^(−λt)·cos(ωt)`）。
-- 时间线在 `src/app.jsx` 的 `T`：弹簧入场 → 停留到 3.7s → 0.65s 收回 → 4.5s 退出。
-- 窗口：`main.js` 开全屏透明、点击穿透、screen-saver 层级置顶、不抢焦点的窗口。渲染进程报错写到 `toast.log`。
-- 由 Task Scheduler `LifeOSDailyReview` → `~/.claude/scripts/lifeos-daily-review.ps1` 调用：脚本先补齐本周天复盘，再运行本程序，退出后打开 `00 中控OS.base`。
-- 改完运行 `npm run build`。预览：`node_modules\electron\dist\electron.exe .`（加 `--preview` 停留更久）。
+默认配色是宇宙色盘：30·30 绿 → 青 → 靛 → 紫 → 品红 → 粉，沿屏幕一圈缓慢流动。另有 `alert`（红橙粉）、`calm`（蓝紫）、`focus`（绿）三个预设，也可以传 1–6 个自定义颜色。
 
-## 复用为其他全局提醒
-任何脚本里一行调用（包装脚本在 `~/.claude/scripts/edge-glow.ps1`）：
+## 安装
 
-```powershell
-& "$env:USERPROFILE\.claude\scripts\edge-glow.ps1"                          # 默认宇宙色盘，约 4.5 秒，等播完再返回
-& "$env:USERPROFILE\.claude\scripts\edge-glow.ps1" -Preset alert -Hold 6000   # 预设：cosmos / alert（红橙粉）/ calm（蓝紫）/ focus（绿）
-& "$env:USERPROFILE\.claude\scripts\edge-glow.ps1" -Colors '#80EF80','#7C8CFF' -NoWait   # 自定义 1–6 色，不等播完
+需要 Node.js 18 以上。
+
+```bash
+git clone https://github.com/Yuchen808/Screen-Edge-Alert.git
+cd Screen-Edge-Alert
+npm install
+npm run build
 ```
 
-直接调程序：`electron.exe "<本目录>" --hold=<ms> --colors=80EF80,7C8CFF,...`（`--hold` 是开始收回的时刻，结束时刻 = hold + 800ms）。
+## 使用
+
+**macOS / Linux**
+
+```bash
+./scripts/edge-glow.sh                       # 默认宇宙色盘，约 4.5 秒
+./scripts/edge-glow.sh -p alert -H 6000      # 预设 cosmos / alert / calm / focus；6 秒时开始收回
+./scripts/edge-glow.sh -c 80EF80,7C8CFF -n   # 自定义 1–6 色（逗号分隔的 hex）；-n 表示不等播完就返回
+```
+
+**Windows（PowerShell）**
+
+```powershell
+.\scripts\edge-glow.ps1
+.\scripts\edge-glow.ps1 -Preset alert -Hold 6000
+.\scripts\edge-glow.ps1 -Colors '#80EF80','#7C8CFF' -NoWait
+```
+
+**直接调用程序**
+
+```bash
+npx electron . --hold=3700 --colors=80EF80,7C8CFF   # 加 --preview 会停留 9 秒，方便调参
+```
+
+`--hold` 是开始收回的时刻（毫秒），程序在 hold + 800ms 时退出。
+
+## 定时提醒
+
+- **macOS**：用 launchd，在 `~/Library/LaunchAgents/` 里放一个 plist，按 `StartCalendarInterval` 定时运行 `scripts/edge-glow.sh`。也可以用 Shortcuts（快捷指令）的「运行 Shell 脚本」。
+- **Windows**：用 Task Scheduler，登录类型选 Interactive，运行 `powershell -File scripts\edge-glow.ps1`。
+
+提醒结束后要打开某个 App 或文件，就把那条命令写在脚本后面。默认会等光效播完才返回，不需要加 `-n`/`-NoWait`。
+
+## 原理
+
+- `src/glow.js` 是一个全屏 fragment shader。光由四层叠成：一条 Lorentzian `1/(d+t)` 细亮线，加中、宽、环境三层指数衰减。距离用圆角矩形 SDF 算到屏幕边，颜色按角度在色盘里流动。输出是预乘 alpha，经过软 tone-map 并加抖动，避免色带。
+- `src/app.js` 管时间线：欠阻尼弹簧 `1 − e^(−λt)·cos(ωt)` 入场，停留到 `--hold`，再用 easeInCubic 收回。
+- `main.js` 开窗口：透明、无边框、点击穿透、screen-saver 层级置顶、不抢焦点。macOS 上会隐藏 Dock 图标，并设置在所有桌面和全屏 App 上可见。渲染报错写到 `toast.log`。
+
+参考：[AppleIntelligenceGlowEffect](https://github.com/jacobamobin/AppleIntelligenceGlowEffect) 的多层叠加，[glsl-playground](https://github.com/aaaa-zhen/glsl-playground) 的发光线和弹簧曲线。
 
 ## 试过又去掉的
-- 右下角宇宙色晕染（shader 里 `uBloom` 代码还在，传 0 不画）：像一坨，太抢。
-- 「Time to log」玻璃卡片：先用 liquid-glass-react，在 Windows Chromium 上多层错位、截图未模糊（透出背后窗口图标）、高光边粗；改成单层 CSS 毛玻璃 + desktopCapturer 垫底后干净了，但用户觉得卡片多余，整个去掉。
-- 坑：GLSL 里 `half` 是保留字；React 19 的 render 是异步的，挂载后立刻量 DOM 会拿到 null。
+
+- 右下角的宇宙色晕染：太抢，像一大坨。`glow.js` 里 `uBloom` 那段代码还在，传 0 就不画。
+- 「Time to log」玻璃卡片：liquid-glass-react 在 Windows Chromium 上几层对不齐，高光边也粗。换成单层 CSS 毛玻璃之后干净了，但卡片本身是多余的。
+- 坑：GLSL 里 `half` 是保留字；`backdrop-filter` 元素的祖先上不能放 opacity/filter，否则会变成 backdrop root。
