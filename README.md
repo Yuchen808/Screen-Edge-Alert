@@ -2,7 +2,7 @@
 
 屏幕边缘光提醒，Siri / Apple Intelligence 那种效果：屏幕四边亮起一圈流动的光，带一点弹簧回弹，停留一会儿后收回，然后程序自动退出。窗口全屏透明、点击穿透、不抢焦点，打字和点击都不受影响。Windows 和 macOS 都能用。
 
-默认配色是宇宙色盘：30·30 绿 → 青 → 靛 → 紫 → 品红 → 粉，沿屏幕一圈缓慢流动。另有 `alert`（红橙粉）、`calm`（蓝紫）、`focus`（绿）三个预设，也可以传 1–6 个自定义颜色。
+默认配色是宇宙色盘：30·30 绿 → 青 → 靛 → 紫 → 品红 → 粉，沿屏幕一圈缓慢流动。另有 `alert`（红橙粉）、`calm`（蓝紫）、`focus`（绿）、`okr`（暖光：奶油 → 琥珀 → 血橙 → 焦糖）四个预设，也可以传 1–6 个自定义颜色。
 
 ## 安装
 
@@ -21,7 +21,7 @@ npm run build
 
 ```bash
 ./scripts/edge-glow.sh                       # 默认宇宙色盘，约 4.5 秒
-./scripts/edge-glow.sh -p alert -H 6000      # 预设 cosmos / alert / calm / focus；6 秒时开始收回
+./scripts/edge-glow.sh -p alert -H 6000      # 预设 cosmos / alert / calm / focus / okr；6 秒时开始收回
 ./scripts/edge-glow.sh -c 80EF80,7C8CFF -n   # 自定义 1–6 色（逗号分隔的 hex）；-n 表示不等播完就返回
 ```
 
